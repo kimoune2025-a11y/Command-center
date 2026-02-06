@@ -249,6 +249,10 @@ async def register(user_data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Force role to be viewer or manager only - admin cannot be self-assigned
+    allowed_roles = ["viewer", "manager"]
+    role = user_data.role if user_data.role in allowed_roles else "viewer"
+    
     user_id = str(uuid.uuid4())
     hashed_password = pwd_context.hash(user_data.password)
     
@@ -257,7 +261,7 @@ async def register(user_data: UserCreate):
         "email": user_data.email,
         "password": hashed_password,
         "name": user_data.name,
-        "role": user_data.role,
+        "role": role,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -268,7 +272,7 @@ async def register(user_data: UserCreate):
         id=user_id,
         email=user_data.email,
         name=user_data.name,
-        role=user_data.role,
+        role=role,
         created_at=user_doc["created_at"]
     )
     

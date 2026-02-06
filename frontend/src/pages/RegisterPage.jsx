@@ -134,7 +134,6 @@ export default function RegisterPage() {
                 <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
                   <SelectItem value="viewer" className="text-white hover:bg-[#121212]">Viewer</SelectItem>
                   <SelectItem value="manager" className="text-white hover:bg-[#121212]">Manager</SelectItem>
-                  <SelectItem value="admin" className="text-white hover:bg-[#121212]">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
