@@ -70,7 +70,7 @@ export default function TasksPage() {
     e.preventDefault();
     try {
       const data = { ...formData };
-      if (!data.project_id) data.project_id = null;
+      if (data.project_id === 'none' || !data.project_id) data.project_id = null;
       if (!data.assigned_to) data.assigned_to = null;
       
       if (editingTask) {

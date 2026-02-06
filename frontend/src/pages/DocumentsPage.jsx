@@ -65,7 +65,7 @@ export default function DocumentsPage() {
       fd.append('file', formData.file);
       fd.append('title', formData.title);
       fd.append('category', formData.category);
-      if (formData.project_id) {
+      if (formData.project_id && formData.project_id !== 'none') {
         fd.append('project_id', formData.project_id);
       }
       

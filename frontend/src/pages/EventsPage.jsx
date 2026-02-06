@@ -63,7 +63,7 @@ export default function EventsPage() {
     e.preventDefault();
     try {
       const data = { ...formData };
-      if (!data.project_id) data.project_id = null;
+      if (data.project_id === 'none' || !data.project_id) data.project_id = null;
       if (!data.end_date) data.end_date = null;
       
       if (editingEvent) {

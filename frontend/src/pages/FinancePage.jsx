@@ -68,7 +68,7 @@ export default function FinancePage() {
     e.preventDefault();
     try {
       const data = { ...formData };
-      if (!data.project_id) data.project_id = null;
+      if (data.project_id === 'none' || !data.project_id) data.project_id = null;
       if (!data.sponsor_id) data.sponsor_id = null;
       
       if (editingRecord) {
