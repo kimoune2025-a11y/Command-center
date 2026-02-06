@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { dashboardAPI } from '../lib/api';
 import { 
   FolderKanban, 
@@ -18,6 +19,7 @@ import { format, parseISO } from 'date-fns';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -81,14 +83,14 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-rajdhani font-bold tracking-wider text-white">
-            COMMAND CENTER
+            {t('dashboard.title').toUpperCase()}
           </h1>
           <p className="text-[#A1A1AA] text-sm mt-1">
-            Welcome back, <span className="text-[#D4AF37]">{user?.name}</span>
+            {t('dashboard.welcomeBack')}, <span className="text-[#D4AF37]">{user?.name}</span>
           </p>
         </div>
         <div className="text-right hidden md:block">
-          <p className="text-[#52525B] text-xs uppercase tracking-wider">Last Updated</p>
+          <p className="text-[#52525B] text-xs uppercase tracking-wider">{t('dashboard.lastUpdated')}</p>
           <p className="text-white font-mono text-sm">{format(new Date(), 'MMM d, HH:mm')}</p>
         </div>
       </div>
@@ -104,10 +106,10 @@ export default function DashboardPage() {
               </div>
               <ArrowRight size={16} className="text-[#52525B] group-hover:text-[#D4AF37] transition-colors" />
             </div>
-            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">Projects</p>
+            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">{t('dashboard.projects')}</p>
             <p className="text-3xl font-rajdhani font-bold text-white">{stats?.projects?.total || 0}</p>
             <p className="text-[#52525B] text-xs mt-2">
-              <span className="text-[#10B981]">{stats?.projects?.active || 0}</span> active
+              <span className="text-[#10B981]">{stats?.projects?.active || 0}</span> {t('dashboard.active')}
             </p>
           </div>
         </Link>
@@ -122,14 +124,14 @@ export default function DashboardPage() {
               {stats?.tasks?.urgent > 0 && (
                 <div className="flex items-center gap-1 text-[#EF4444] text-xs">
                   <AlertTriangle size={12} />
-                  <span>{stats.tasks.urgent} urgent</span>
+                  <span>{stats.tasks.urgent} {t('dashboard.urgent')}</span>
                 </div>
               )}
             </div>
-            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">Tasks</p>
+            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">{t('dashboard.tasks')}</p>
             <p className="text-3xl font-rajdhani font-bold text-white">{stats?.tasks?.total || 0}</p>
             <p className="text-[#52525B] text-xs mt-2">
-              <span className="text-[#F59E0B]">{stats?.tasks?.urgent || 0}</span> need attention
+              <span className="text-[#F59E0B]">{stats?.tasks?.urgent || 0}</span> {t('dashboard.needAttention')}
             </p>
           </div>
         </Link>
@@ -143,9 +145,9 @@ export default function DashboardPage() {
               </div>
               <ArrowRight size={16} className="text-[#52525B] group-hover:text-[#D4AF37] transition-colors" />
             </div>
-            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">Contacts</p>
+            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">{t('dashboard.contacts')}</p>
             <p className="text-3xl font-rajdhani font-bold text-white">{stats?.contacts || 0}</p>
-            <p className="text-[#52525B] text-xs mt-2">Partners & Sponsors</p>
+            <p className="text-[#52525B] text-xs mt-2">{t('dashboard.partnersSponsors')}</p>
           </div>
         </Link>
 
@@ -158,9 +160,9 @@ export default function DashboardPage() {
               </div>
               <ArrowRight size={16} className="text-[#52525B] group-hover:text-[#D4AF37] transition-colors" />
             </div>
-            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">Events</p>
+            <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">{t('dashboard.events')}</p>
             <p className="text-3xl font-rajdhani font-bold text-white">{stats?.events || 0}</p>
-            <p className="text-[#52525B] text-xs mt-2">Scheduled events</p>
+            <p className="text-[#52525B] text-xs mt-2">{t('dashboard.scheduledEvents')}</p>
           </div>
         </Link>
       </div>
@@ -171,7 +173,7 @@ export default function DashboardPage() {
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="metric-revenue">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={18} className="text-[#10B981]" />
-            <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">Revenue</span>
+            <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('dashboard.revenue')}</span>
           </div>
           <p className="text-2xl font-mono font-bold text-[#10B981]">
             {formatCurrency(stats?.finance?.revenue || 0)}
@@ -182,7 +184,7 @@ export default function DashboardPage() {
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="metric-expenses">
           <div className="flex items-center gap-2 mb-4">
             <TrendingDown size={18} className="text-[#EF4444]" />
-            <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">Expenses</span>
+            <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('dashboard.expenses')}</span>
           </div>
           <p className="text-2xl font-mono font-bold text-[#EF4444]">
             {formatCurrency(stats?.finance?.expenses || 0)}
@@ -193,7 +195,7 @@ export default function DashboardPage() {
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="metric-profit">
           <div className="flex items-center gap-2 mb-4">
             <DollarSign size={18} className="text-[#D4AF37]" />
-            <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">Net Profit</span>
+            <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('dashboard.netProfit')}</span>
           </div>
           <p className={`text-2xl font-mono font-bold ${(stats?.finance?.profit || 0) >= 0 ? 'text-[#D4AF37]' : 'text-[#EF4444]'}`}>
             {formatCurrency(stats?.finance?.profit || 0)}
@@ -206,8 +208,8 @@ export default function DashboardPage() {
         {/* Upcoming Events */}
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="upcoming-events">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">UPCOMING EVENTS</h3>
-            <Link to="/events" className="text-[#D4AF37] text-xs hover:underline">View All</Link>
+            <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">{t('dashboard.upcomingEvents').toUpperCase()}</h3>
+            <Link to="/events" className="text-[#D4AF37] text-xs hover:underline">{t('common.viewAll')}</Link>
           </div>
           {stats?.upcoming_events?.length > 0 ? (
             <div className="space-y-3">
@@ -215,7 +217,7 @@ export default function DashboardPage() {
                 <div key={event.id} className="flex items-center justify-between py-2 border-b border-[#27272A] last:border-0">
                   <div>
                     <p className="text-white text-sm font-medium">{event.title}</p>
-                    <p className="text-[#52525B] text-xs">{event.location || 'No location'}</p>
+                    <p className="text-[#52525B] text-xs">{event.location || t('dashboard.noLocation')}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[#D4AF37] text-xs font-mono">{formatDate(event.date)}</p>
@@ -224,15 +226,15 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-[#52525B] text-sm">No upcoming events</p>
+            <p className="text-[#52525B] text-sm">{t('dashboard.noUpcomingEvents')}</p>
           )}
         </div>
 
         {/* Recent Tasks */}
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="recent-tasks">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">ACTIVE TASKS</h3>
-            <Link to="/tasks" className="text-[#D4AF37] text-xs hover:underline">View All</Link>
+            <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">{t('dashboard.activeTasks').toUpperCase()}</h3>
+            <Link to="/tasks" className="text-[#D4AF37] text-xs hover:underline">{t('common.viewAll')}</Link>
           </div>
           {stats?.recent_tasks?.length > 0 ? (
             <div className="space-y-3">
@@ -259,7 +261,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-[#52525B] text-sm">No active tasks</p>
+            <p className="text-[#52525B] text-sm">{t('dashboard.noActiveTasks')}</p>
           )}
         </div>
       </div>
