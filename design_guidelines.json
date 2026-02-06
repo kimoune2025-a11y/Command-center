@@ -1,0 +1,139 @@
+{
+  "project_name": "CVLN Command Center",
+  "design_philosophy": {
+    "identity": "Executive Futurism",
+    "core_values": [
+      "Authority",
+      "Precision",
+      "Wealth",
+      "Control"
+    ],
+    "visual_style": "Dark mode primary, sharp edges, gold accents, high density data, zero-interface feel."
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Rajdhani, sans-serif",
+      "body": "DM Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "weights": {
+      "headings": "700",
+      "body": "400",
+      "bold": "600"
+    },
+    "sizes": {
+      "h1": "text-4xl md:text-5xl tracking-tight uppercase",
+      "h2": "text-3xl tracking-tight uppercase",
+      "h3": "text-xl tracking-wide uppercase",
+      "body": "text-sm leading-relaxed",
+      "small": "text-xs tracking-wider opacity-70"
+    },
+    "instructions": "Use Rajdhani for all headings to give a technical, command-center feel. Use DM Sans for body text for high readability. Use JetBrains Mono for data values, IDs, and financial figures."
+  },
+  "colors": {
+    "palette": {
+      "background": "#050505",
+      "surface": "#0A0A0A",
+      "surface_highlight": "#121212",
+      "primary": "#D4AF37",
+      "primary_hover": "#B5952F",
+      "secondary": "#1F1F1F",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#A1A1AA",
+      "text_muted": "#52525B",
+      "border": "#27272A",
+      "border_highlight": "#D4AF37",
+      "success": "#10B981",
+      "error": "#EF4444",
+      "warning": "#F59E0B"
+    },
+    "gradients": {
+      "gold_glow": "linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(0, 0, 0, 0) 100%)",
+      "surface_shine": "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)"
+    },
+    "usage_rules": "Backgrounds must be deep black (#050505). Cards are slightly lighter (#0A0A0A). Gold (#D4AF37) is used SPARINGLY for active states, key metrics, and primary buttons. Borders should be subtle (#27272A) unless active."
+  },
+  "layout": {
+    "grid_system": "Bento Grid Mode B (High Density)",
+    "spacing": {
+      "container_padding": "p-6 md:p-8",
+      "item_gap": "gap-4 md:gap-6",
+      "internal_padding": "p-4"
+    },
+    "structure": {
+      "sidebar": "Fixed width (240px), collapsible, glassmorphism effect.",
+      "main_content": "Fluid width, max-w-[1600px] centered for ultra-wide screens.",
+      "dashboard_grid": "grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]"
+    },
+    "z_index": {
+      "modal": 50,
+      "dropdown": 40,
+      "sticky_header": 30,
+      "default": 1
+    }
+  },
+  "components": {
+    "cards": {
+      "style": "Sharp edges (rounded-sm), dark background (#0A0A0A), 1px border (#27272A).",
+      "hover": "border-[#D4AF37]/40 transition-colors duration-300",
+      "active": "border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+    },
+    "buttons": {
+      "primary": "bg-[#D4AF37] text-black font-bold uppercase tracking-wider hover:bg-[#B5952F] rounded-sm px-6 py-2",
+      "secondary": "bg-transparent border border-[#27272A] text-white hover:border-[#D4AF37] hover:text-[#D4AF37] rounded-sm px-6 py-2",
+      "ghost": "text-[#A1A1AA] hover:text-white hover:bg-white/5 rounded-sm"
+    },
+    "inputs": {
+      "style": "bg-[#121212] border border-[#27272A] text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-sm h-10"
+    },
+    "charts": {
+      "library": "Recharts (via Shadcn)",
+      "colors": ["#D4AF37", "#333333", "#52525B", "#FFFFFF"],
+      "style": "Minimalist, no grid lines (or very subtle), tooltip with dark background and gold border."
+    },
+    "navigation": {
+      "sidebar_item": "flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A1A1AA] hover:text-white hover:bg-white/5 rounded-sm transition-all",
+      "sidebar_item_active": "text-[#D4AF37] bg-[#D4AF37]/10 border-r-2 border-[#D4AF37]"
+    }
+  },
+  "visual_enhancers": {
+    "texture": "Add a subtle noise texture overlay (opacity 0.02) to the main background to prevent banding and add 'film' quality.",
+    "glassmorphism": "Use backdrop-blur-xl bg-black/60 border-b border-white/5 for sticky headers.",
+    "borders": "Use 'Tracing Beam' effect for high-priority cards (animated gradient border).",
+    "shadows": "Avoid heavy drop shadows. Use 'Glow' effects: shadow-[0_0_20px_rgba(212,175,55,0.15)] for active elements."
+  },
+  "assets": {
+    "images": {
+      "project_thumbnails": [
+        "https://images.unsplash.com/photo-1750598243589-1cc3770356b8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGNyZWF0aXZlJTIwcHJvamVjdCUyMHRodW1ibmFpbCUyMGRhcmslMjBnb2xkfGVufDB8fHx8MTc3MDM1MzYxMnww&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1760902419069-466f6f82c8b2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGNyZWF0aXZlJTIwcHJvamVjdCUyMHRodW1ibmFpbCUyMGRhcmslMjBnb2xkfGVufDB8fHx8MTc3MDM1MzYxMnww&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1758260759878-f58196990628?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGNyZWF0aXZlJTIwcHJvamVjdCUyMHRodW1ibmFpbCUyMGRhcmslMjBnb2xkfGVufDB8fHx8MTc3MDM1MzYxMnww&ixlib=rb-4.1.0&q=85"
+      ],
+      "user_avatars": [
+        "https://images.unsplash.com/photo-1767175620484-1ed37931a0d1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBleGVjdXRpdmUlMjBwb3J0cmFpdCUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDM1MzYxN3ww&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1758600587730-a11917c13b85?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBleGVjdXRpdmUlMjBwb3J0cmFpdCUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDM1MzYxN3ww&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1624670319970-37aa780d4874?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBleGVjdXRpdmUlMjBwb3J0cmFpdCUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDM1MzYxN3ww&ixlib=rb-4.1.0&q=85"
+      ]
+    },
+    "icons": "Use Lucide-React icons. Stroke width 1.5px for a refined look."
+  },
+  "universal_guidelines": {
+    "anti_ai_rules": [
+      "Do not use purple or teal for CTAs.",
+      "Do not use Inter for headings.",
+      "Do not center-align everything.",
+      "Do not use gradients everywhere.",
+      "Do not use 'AI assistant' emojis."
+    ],
+    "interaction_rules": [
+      "All interactive elements must have a hover state.",
+      "Use 'sonner' for toasts.",
+      "Use 'data-testid' for all interactive elements."
+    ],
+    "export_rules": [
+      "Components MUST use named exports.",
+      "Pages MUST use default exports."
+    ]
+  },
+  "instructions_to_main_agent": "You are building the 'CVLN Command Center'. This is a high-stakes executive dashboard. Your goal is to make it feel like a tool for a billionaire. Strict adherence to the Dark Mode + Gold Accent theme. Use the provided image URLs for placeholders. Implement the 'Bento Grid' layout for the dashboard. Ensure all charts are styled to match the dark theme (no white backgrounds). Use 'Rajdhani' font for all headers to give it that sci-fi/tech edge."
+}
