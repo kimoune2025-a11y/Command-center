@@ -83,25 +83,55 @@ class CVLNCommandCenterTester:
         """Test user registration and authentication"""
         self.log("=== TESTING USER REGISTRATION & AUTHENTICATION ===")
         
-        # Test admin registration
-        admin_data = {
+        # Try to login with existing admin first
+        login_data = {
             "email": "admin@cvln.com",
-            "password": "admin123",
-            "name": "Admin User",
-            "role": "admin"
+            "password": "admin123"
         }
         success, response = self.run_test(
-            "Admin Registration",
+            "Admin Login (Existing)",
             "POST",
-            "auth/register",
+            "auth/login",
             200,
-            data=admin_data
+            data=login_data
         )
+        
         if success and 'access_token' in response:
             self.admin_token = response['access_token']
             self.token = self.admin_token  # Set as default
-            self.created_resources['users'].append(response['user']['id'])
-            self.log(f"Admin user created with ID: {response['user']['id']}")
+            self.log(f"Logged in with existing admin user")
+        else:
+            # If login fails, try to register new admin
+            admin_data = {
+                "email": f"admin_{uuid.uuid4().hex[:8]}@cvln.com",
+                "password": "admin123",
+                "name": "Admin User",
+                "role": "admin"
+            }
+            success, response = self.run_test(
+                "Admin Registration",
+                "POST",
+                "auth/register",
+                200,
+                data=admin_data
+            )
+            if success and 'access_token' in response:
+                self.admin_token = response['access_token']
+                self.token = self.admin_token  # Set as default
+                self.created_resources['users'].append(response['user']['id'])
+                self.log(f"Admin user created with ID: {response['user']['id']}")
+
+        # Test get current user
+        success, response = self.run_test(
+            "Get Current User",
+            "GET",
+            "auth/me",
+            200
+        )
+        
+        if not success:
+            self.log("Failed to authenticate. Stopping tests.", "CRITICAL")
+            return False
 
         # Test manager registration
         manager_data = {
@@ -138,27 +168,6 @@ class CVLNCommandCenterTester:
         if success and 'access_token' in response:
             self.viewer_token = response['access_token']
             self.created_resources['users'].append(response['user']['id'])
-
-        # Test login
-        login_data = {
-            "email": "admin@cvln.com",
-            "password": "admin123"
-        }
-        success, response = self.run_test(
-            "Admin Login",
-            "POST",
-            "auth/login",
-            200,
-            data=login_data
-        )
-
-        # Test get current user
-        self.run_test(
-            "Get Current User",
-            "GET",
-            "auth/me",
-            200
-        )
 
         return self.admin_token is not None
 
