@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -20,22 +21,23 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-const navItems = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/projects', icon: FolderKanban, label: 'Projects' },
-  { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
-  { path: '/finance', icon: DollarSign, label: 'Finance' },
-  { path: '/contacts', icon: Users, label: 'Contacts' },
-  { path: '/events', icon: Calendar, label: 'Events' },
-  { path: '/documents', icon: FileText, label: 'Documents' },
-  { path: '/kpis', icon: BarChart3, label: 'KPIs' },
-];
-
 export const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, logout, isAdmin } = useAuth();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { path: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+    { path: '/projects', icon: FolderKanban, labelKey: 'nav.projects' },
+    { path: '/tasks', icon: CheckSquare, labelKey: 'nav.tasks' },
+    { path: '/finance', icon: DollarSign, labelKey: 'nav.finance' },
+    { path: '/contacts', icon: Users, labelKey: 'nav.contacts' },
+    { path: '/events', icon: Calendar, labelKey: 'nav.events' },
+    { path: '/documents', icon: FileText, labelKey: 'nav.documents' },
+    { path: '/kpis', icon: BarChart3, labelKey: 'nav.kpis' },
+  ];
 
   const NavLink = ({ item }) => {
     const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
@@ -44,7 +46,7 @@ export const Sidebar = () => {
     return (
       <Link
         to={item.path}
-        data-testid={`nav-${item.label.toLowerCase()}`}
+        data-testid={`nav-${t(item.labelKey).toLowerCase()}`}
         onClick={() => setMobileOpen(false)}
         className={cn(
           'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-sm transition-all duration-200',
@@ -54,7 +56,7 @@ export const Sidebar = () => {
         )}
       >
         <Icon size={18} strokeWidth={1.5} />
-        {!collapsed && <span>{item.label}</span>}
+        {!collapsed && <span>{t(item.labelKey)}</span>}
       </Link>
     );
   };
@@ -96,7 +98,7 @@ export const Sidebar = () => {
               <div className="w-8 h-8 bg-[#D4AF37] rounded-sm flex items-center justify-center">
                 <span className="text-black font-bold text-sm">CV</span>
               </div>
-              <span className="font-rajdhani font-bold text-lg tracking-wider">CVLN</span>
+              <span className="font-rajdhani font-bold text-lg tracking-wider">{t('branding.cvln')}</span>
             </div>
           )}
           <button
@@ -130,7 +132,7 @@ export const Sidebar = () => {
               )}
             >
               <Shield size={18} strokeWidth={1.5} />
-              {!collapsed && <span>Admin</span>}
+              {!collapsed && <span>{t('nav.admin')}</span>}
             </Link>
           </div>
         )}
@@ -140,7 +142,7 @@ export const Sidebar = () => {
           {!collapsed && user && (
             <div className="px-3 py-2 mb-2">
               <p className="text-sm font-medium text-white truncate">{user.name}</p>
-              <p className="text-xs text-[#52525B] capitalize">{user.role}</p>
+              <p className="text-xs text-[#52525B] capitalize">{t(`roles.${user.role}`)}</p>
             </div>
           )}
           <div className="space-y-1">
@@ -156,7 +158,7 @@ export const Sidebar = () => {
               )}
             >
               <Settings size={18} strokeWidth={1.5} />
-              {!collapsed && <span>Settings</span>}
+              {!collapsed && <span>{t('nav.settings')}</span>}
             </Link>
             <button
               data-testid="logout-btn"
@@ -164,7 +166,7 @@ export const Sidebar = () => {
               className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#A1A1AA] hover:text-[#EF4444] hover:bg-[#EF4444]/5 rounded-sm transition-all duration-200"
             >
               <LogOut size={18} strokeWidth={1.5} />
-              {!collapsed && <span>Logout</span>}
+              {!collapsed && <span>{t('auth.logout')}</span>}
             </button>
           </div>
         </div>
