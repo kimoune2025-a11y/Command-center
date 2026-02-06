@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { dashboardAPI } from '../lib/api';
+import { GlobalSearch } from '../components/Search/GlobalSearch';
+import { AlertsPanel, AlertBadge } from '../components/Alerts/AlertsPanel';
 import { 
   FolderKanban, 
   CheckSquare, 
@@ -12,36 +14,70 @@ import {
   DollarSign,
   AlertTriangle,
   ArrowRight,
-  Clock
+  Clock,
+  Search,
+  Flame,
+  Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
+import { Progress } from '../components/ui/progress';
+import axios from 'axios';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [stats, setStats] = useState(null);
+  const [heatmap, setHeatmap] = useState([]);
+  const [weeklySummary, setWeeklySummary] = useState(null);
+  const [burnRate, setBurnRate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(false);
 
   useEffect(() => {
-    fetchStats();
+    fetchAllData();
+    
+    // Keyboard shortcut for search
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+      if (e.key === 'Escape') {
+        setShowSearch(false);
+        setShowAlerts(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const fetchStats = async () => {
+  const fetchAllData = async () => {
     try {
-      const response = await dashboardAPI.getStats();
-      setStats(response.data);
+      const [statsRes, heatmapRes, weeklyRes, burnRes] = await Promise.all([
+        dashboardAPI.getStats(),
+        axios.get(`${API}/dashboard/heatmap`),
+        axios.get(`${API}/dashboard/weekly-summary`),
+        axios.get(`${API}/finance/burn-rate`)
+      ]);
+      setStats(statsRes.data);
+      setHeatmap(heatmapRes.data);
+      setWeeklySummary(weeklyRes.data);
+      setBurnRate(burnRes.data);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
@@ -49,7 +85,7 @@ export default function DashboardPage() {
 
   const formatDate = (dateString) => {
     try {
-      return format(parseISO(dateString), 'MMM d, yyyy');
+      return format(parseISO(dateString), 'dd MMM yyyy');
     } catch {
       return dateString;
     }
@@ -62,6 +98,13 @@ export default function DashboardPage() {
       case 'medium': return 'text-[#D4AF37]';
       default: return 'text-[#A1A1AA]';
     }
+  };
+
+  const getUrgencyColor = (score) => {
+    if (score >= 70) return '#EF4444';
+    if (score >= 40) return '#F59E0B';
+    if (score >= 20) return '#D4AF37';
+    return '#10B981';
   };
 
   if (loading) {
@@ -79,6 +122,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
+      {/* Global Search Modal */}
+      {showSearch && <GlobalSearch onClose={() => setShowSearch(false)} />}
+      
+      {/* Alerts Panel */}
+      {showAlerts && <AlertsPanel onClose={() => setShowAlerts(false)} />}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -89,15 +138,65 @@ export default function DashboardPage() {
             {t('dashboard.welcomeBack')}, <span className="text-[#D4AF37]">{user?.name}</span>
           </p>
         </div>
-        <div className="text-right hidden md:block">
-          <p className="text-[#52525B] text-xs uppercase tracking-wider">{t('dashboard.lastUpdated')}</p>
-          <p className="text-white font-mono text-sm">{format(new Date(), 'MMM d, HH:mm')}</p>
+        <div className="flex items-center gap-2">
+          {/* Search Button */}
+          <button
+            onClick={() => setShowSearch(true)}
+            data-testid="global-search-btn"
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#121212] border border-[#27272A] rounded-sm text-[#A1A1AA] hover:text-white hover:border-[#D4AF37]/40 transition-colors"
+          >
+            <Search size={16} />
+            <span className="text-sm hidden sm:inline">Rechercher</span>
+            <kbd className="text-xs bg-[#0A0A0A] px-1.5 py-0.5 rounded hidden sm:inline">⌘K</kbd>
+          </button>
+          
+          {/* Alerts Badge */}
+          <AlertBadge onClick={() => setShowAlerts(true)} />
         </div>
       </div>
 
-      {/* Metric Cards - Bento Grid */}
+      {/* Weekly Summary Bar */}
+      {weeklySummary && (
+        <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="weekly-summary">
+          <div className="flex items-center gap-2 mb-3">
+            <Activity size={16} className="text-[#D4AF37]" />
+            <span className="text-sm font-semibold text-white uppercase tracking-wider">Résumé de la semaine</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div>
+              <p className="text-[#52525B] text-xs">Tâches créées</p>
+              <p className="text-xl font-mono font-bold text-white">{weeklySummary.tasks_created}</p>
+            </div>
+            <div>
+              <p className="text-[#52525B] text-xs">Tâches terminées</p>
+              <p className="text-xl font-mono font-bold text-[#10B981]">{weeklySummary.tasks_completed}</p>
+            </div>
+            <div>
+              <p className="text-[#52525B] text-xs">Taux completion</p>
+              <p className="text-xl font-mono font-bold text-[#D4AF37]">{weeklySummary.completion_rate}%</p>
+            </div>
+            <div>
+              <p className="text-[#52525B] text-xs">Événements</p>
+              <p className="text-xl font-mono font-bold text-white">{weeklySummary.events_upcoming}</p>
+            </div>
+            <div>
+              <p className="text-[#52525B] text-xs">Revenus</p>
+              <p className="text-xl font-mono font-bold text-[#10B981]">{formatCurrency(weeklySummary.revenue_week)}</p>
+            </div>
+            <div>
+              <p className="text-[#52525B] text-xs">Dépenses</p>
+              <p className="text-xl font-mono font-bold text-[#EF4444]">{formatCurrency(weeklySummary.expenses_week)}</p>
+            </div>
+            <div>
+              <p className="text-[#52525B] text-xs">Notes</p>
+              <p className="text-xl font-mono font-bold text-white">{weeklySummary.notes_created}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Projects Card */}
         <Link to="/projects" className="group" data-testid="metric-projects">
           <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4 h-full hover:border-[#D4AF37]/40 transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -114,7 +213,6 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        {/* Tasks Card */}
         <Link to="/tasks" className="group" data-testid="metric-tasks">
           <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4 h-full hover:border-[#D4AF37]/40 transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -124,19 +222,18 @@ export default function DashboardPage() {
               {stats?.tasks?.urgent > 0 && (
                 <div className="flex items-center gap-1 text-[#EF4444] text-xs">
                   <AlertTriangle size={12} />
-                  <span>{stats.tasks.urgent} {t('dashboard.urgent')}</span>
+                  <span>{stats.tasks.urgent}</span>
                 </div>
               )}
             </div>
             <p className="text-[#A1A1AA] text-xs uppercase tracking-wider mb-1">{t('dashboard.tasks')}</p>
             <p className="text-3xl font-rajdhani font-bold text-white">{stats?.tasks?.total || 0}</p>
             <p className="text-[#52525B] text-xs mt-2">
-              <span className="text-[#F59E0B]">{stats?.tasks?.urgent || 0}</span> {t('dashboard.needAttention')}
+              <span className="text-[#F59E0B]">{stats?.tasks?.urgent || 0}</span> {t('dashboard.urgent')}
             </p>
           </div>
         </Link>
 
-        {/* Contacts Card */}
         <Link to="/contacts" className="group" data-testid="metric-contacts">
           <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4 h-full hover:border-[#D4AF37]/40 transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -151,7 +248,6 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        {/* Events Card */}
         <Link to="/events" className="group" data-testid="metric-events">
           <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4 h-full hover:border-[#D4AF37]/40 transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -167,9 +263,8 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Financial Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Revenue */}
+      {/* Financial Overview + Burn Rate */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="metric-revenue">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={18} className="text-[#10B981]" />
@@ -180,7 +275,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Expenses */}
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="metric-expenses">
           <div className="flex items-center gap-2 mb-4">
             <TrendingDown size={18} className="text-[#EF4444]" />
@@ -191,7 +285,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Profit */}
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="metric-profit">
           <div className="flex items-center gap-2 mb-4">
             <DollarSign size={18} className="text-[#D4AF37]" />
@@ -201,11 +294,68 @@ export default function DashboardPage() {
             {formatCurrency(stats?.finance?.profit || 0)}
           </p>
         </div>
+
+        {/* Burn Rate */}
+        {burnRate && (
+          <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="burn-rate">
+            <div className="flex items-center gap-2 mb-4">
+              <Flame size={18} className="text-[#F59E0B]" />
+              <span className="text-[#A1A1AA] text-xs uppercase tracking-wider">Burn Rate</span>
+            </div>
+            <p className="text-xl font-mono font-bold text-[#F59E0B]">
+              {formatCurrency(burnRate.daily_burn_rate)}/jour
+            </p>
+            <p className="text-[#52525B] text-xs mt-1">
+              {burnRate.days_remaining ? `${burnRate.days_remaining} jours restants` : 'Budget infini'}
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Project Urgency Heatmap */}
+      {heatmap.length > 0 && (
+        <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="project-heatmap">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">HEATMAP PROJETS</h3>
+            <Link to="/projects" className="text-[#D4AF37] text-xs hover:underline">{t('common.viewAll')}</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {heatmap.slice(0, 6).map(project => (
+              <Link 
+                key={project.id} 
+                to="/projects"
+                className="bg-[#121212] border border-[#27272A] rounded-sm p-3 hover:border-[#D4AF37]/40 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium text-sm truncate flex-1">{project.name}</span>
+                  <div 
+                    className="w-3 h-3 rounded-full ml-2"
+                    style={{ backgroundColor: getUrgencyColor(project.urgency_score) }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs px-1.5 py-0.5 rounded-sm bg-[#0A0A0A] text-[#A1A1AA]">
+                    {project.category}
+                  </span>
+                  <span className="text-xs text-[#52525B]">
+                    Score: {project.urgency_score}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#52525B]">Progression</span>
+                    <span className="text-[#D4AF37]">{project.progress}%</span>
+                  </div>
+                  <Progress value={project.progress} className="h-1 bg-[#0A0A0A]" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Upcoming Events */}
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="upcoming-events">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">{t('dashboard.upcomingEvents').toUpperCase()}</h3>
@@ -230,7 +380,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Recent Tasks */}
         <div className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4" data-testid="recent-tasks">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-rajdhani font-bold tracking-wider text-white">{t('dashboard.activeTasks').toUpperCase()}</h3>
