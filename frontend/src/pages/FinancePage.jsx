@@ -252,7 +252,7 @@ export default function FinancePage() {
                       <SelectValue placeholder="No project" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
-                      <SelectItem value="" className="text-white hover:bg-[#121212]">No project</SelectItem>
+                      <SelectItem value="none" className="text-white hover:bg-[#121212]">No project</SelectItem>
                       {projects.map(p => (
                         <SelectItem key={p.id} value={p.id} className="text-white hover:bg-[#121212]">
                           {p.name}

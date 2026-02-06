@@ -188,7 +188,7 @@ export default function ProjectsPage() {
                       </SelectTrigger>
                       <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
                         {statusOptions.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-[#121212]">
+                          <SelectItem key={opt.value} value={opt.value || "none"} className="text-white hover:bg-[#121212]">
                             {opt.label}
                           </SelectItem>
                         ))}
