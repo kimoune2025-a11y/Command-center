@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSwitcher } from '../components/Layout/LanguageSwitcher';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -13,6 +15,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -20,7 +23,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      toast.success('Welcome back!');
+      toast.success(t('auth.welcomeBack') + '!');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Login failed');
@@ -33,6 +36,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
       {/* Noise overlay */}
       <div className="noise-overlay" />
+      
+      {/* Language switcher */}
+      <div className="fixed top-4 right-4">
+        <LanguageSwitcher />
+      </div>
 
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
@@ -43,9 +51,9 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl font-rajdhani font-bold tracking-wider text-white">
-            CVLN COMMAND CENTER
+            {t('branding.commandCenter').toUpperCase()}
           </h1>
-          <p className="text-[#A1A1AA] text-sm mt-2">Executive Control Panel</p>
+          <p className="text-[#A1A1AA] text-sm mt-2">{t('branding.executiveControlPanel')}</p>
         </div>
 
         {/* Login Form */}
@@ -53,7 +61,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[#A1A1AA] text-xs uppercase tracking-wider">
-                Email
+                {t('auth.email')}
               </Label>
               <Input
                 id="email"
@@ -69,7 +77,7 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-[#A1A1AA] text-xs uppercase tracking-wider">
-                Password
+                {t('auth.password')}
               </Label>
               <div className="relative">
                 <Input
@@ -101,12 +109,12 @@ export default function LoginPage() {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  Authenticating...
+                  {t('auth.authenticating')}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <LogIn size={16} />
-                  Access Command Center
+                  {t('auth.accessCommandCenter')}
                 </span>
               )}
             </Button>
@@ -114,9 +122,9 @@ export default function LoginPage() {
 
           <div className="mt-6 pt-6 border-t border-[#27272A] text-center">
             <p className="text-[#52525B] text-sm">
-              Don't have access?{' '}
+              {t('auth.noAccount')}{' '}
               <Link to="/register" className="text-[#D4AF37] hover:underline" data-testid="register-link">
-                Request Access
+                {t('auth.requestAccess')}
               </Link>
             </p>
           </div>
@@ -124,7 +132,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[#52525B] text-xs mt-6">
-          CVLN Creative Conglomerate © 2024
+          {t('branding.copyright')}
         </p>
       </div>
     </div>
