@@ -414,7 +414,7 @@ async def get_finance(project_id: Optional[str] = None, user: dict = Depends(get
 
 @api_router.put("/finance/{finance_id}", response_model=FinanceResponse)
 async def update_finance(finance_id: str, finance: FinanceCreate, user: dict = Depends(check_role(["admin", "manager"]))):
-    await db.finance.update_one({"id": finance_id}, {"$set": finance.model_dump()})
+    await db.finance.update_one({"id": finance_id}, {"$set": finance.model_dump(exclude_none=True)})
     updated = await db.finance.find_one({"id": finance_id}, {"_id": 0})
     return FinanceResponse(**updated)
 

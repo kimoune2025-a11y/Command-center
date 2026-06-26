@@ -115,26 +115,41 @@
 ## Implementation Date
 - Initial MVP: January 2026
 - Multilingual Update: January 2026
+- P0 Rollback to stable v1.0 + i18n fixes: June 2026
+
+## v1.0 Rollback Log (June 2026)
+- Reverted DashboardPage (df844ac), ProjectsPage (bfd72b4), TasksPage (0efb620) to clean v1.0 versions; deleted broken v1.2 component dirs (Alerts/Projects/Search/Tasks).
+- Backend confirmed clean v1.0 (no heatmap/weekly-summary/burn-rate; simple Project model).
+- Fixed: Finance PUT 500 (model_dump exclude_none), Sonner toast duration 2.5s, wired i18n into Projects & Tasks pages.
+- LanguageContext default set to French.
+- Verified via testing_agent (iteration_2): backend 28/29 then fixed, frontend all 8 modules OK.
 
 ## Backlog / Future Features
 
+### Upcoming — Conglomerate Mode (strict incremental, after v1.0 stable)
+- [ ] P1 Entities module (CVLN Holding, Factory Maker Studio...): each project belongs to 1 entity. Model + CRUD + UI.
+- [ ] P1 Board Pack page: read-only executive view (entity performance, top 10 priorities, risk summary, cash runway).
+- [ ] P1 Decisions module: log strategic decisions.
+- [ ] P1 Risks module: risk register.
+- [ ] P2 Audit logs (immutable global audit log).
+- [ ] P2 Alerts automation (overdue tasks, budget alerts).
+- [ ] P2 Global search across projects/tasks/contacts/documents.
+
+### Other Backlog
+
 ### P0 (High Priority)
 - [ ] Password reset functionality
-- [ ] Profile picture upload
 - [ ] Data export (CSV/Excel)
 
 ### P1 (Medium Priority)
 - [ ] Team member assignment UI
 - [ ] Task comments/activity log
 - [ ] Email notifications
-- [ ] Dashboard customization
 
 ### P2 (Low Priority)
 - [ ] Cloud storage integration (S3/Google Drive)
-- [ ] Mobile app (React Native)
 - [ ] Advanced reporting
-- [ ] Audit logs
-- [ ] Additional languages (Spanish, German, etc.)
 
 ## Test Credentials
-- **Admin:** admin@cvln.com / admin123
+- **Admin:** cvlgroupe@hotmail.com / CVLN@dmin2026! (see /app/memory/test_credentials.md)
+

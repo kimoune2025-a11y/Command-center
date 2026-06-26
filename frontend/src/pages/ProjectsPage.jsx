@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { projectsAPI } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -12,14 +13,15 @@ import { Plus, Edit, Trash2, Search, FolderKanban, Calendar, Users, DollarSign }
 import { format, parseISO } from 'date-fns';
 
 const statusOptions = [
-  { value: 'planning', label: 'Planning', color: 'bg-[#52525B]' },
-  { value: 'in_progress', label: 'In Progress', color: 'bg-[#D4AF37]' },
-  { value: 'on_hold', label: 'On Hold', color: 'bg-[#EF4444]' },
-  { value: 'completed', label: 'Completed', color: 'bg-[#10B981]' }
+  { value: 'planning', labelKey: 'projects.planning', color: 'bg-[#52525B]' },
+  { value: 'in_progress', labelKey: 'projects.inProgress', color: 'bg-[#D4AF37]' },
+  { value: 'on_hold', labelKey: 'projects.onHold', color: 'bg-[#EF4444]' },
+  { value: 'completed', labelKey: 'projects.completed', color: 'bg-[#10B981]' }
 ];
 
 export default function ProjectsPage() {
   const { canCreate, canDelete } = useAuth();
+  const { t } = useLanguage();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -82,7 +84,7 @@ export default function ProjectsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+    if (!confirm(t('projects.deleteConfirm'))) return;
     try {
       await projectsAPI.delete(id);
       toast.success('Project deleted');
@@ -115,7 +117,7 @@ export default function ProjectsPage() {
     const option = statusOptions.find(o => o.value === status);
     return (
       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-medium uppercase tracking-wider ${option?.color} text-white`}>
-        {option?.label}
+        {option ? t(option.labelKey) : status}
       </span>
     );
   };
@@ -142,26 +144,26 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-rajdhani font-bold tracking-wider text-white">PROJECTS</h1>
-          <p className="text-[#A1A1AA] text-sm mt-1">{projects.length} total projects</p>
+          <h1 className="text-2xl md:text-3xl font-rajdhani font-bold tracking-wider text-white">{t('projects.title').toUpperCase()}</h1>
+          <p className="text-[#A1A1AA] text-sm mt-1">{projects.length} {t('projects.totalProjects')}</p>
         </div>
         {canCreate() && (
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button data-testid="create-project-btn" className="bg-[#D4AF37] text-black font-bold uppercase tracking-wider hover:bg-[#B5952F] rounded-sm">
                 <Plus size={16} className="mr-2" />
-                New Project
+                {t('projects.newProject')}
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-[#0A0A0A] border-[#27272A] text-white max-w-md">
               <DialogHeader>
                 <DialogTitle className="font-rajdhani text-xl tracking-wider">
-                  {editingProject ? 'EDIT PROJECT' : 'NEW PROJECT'}
+                  {(editingProject ? t('projects.editProject') : t('projects.newProject')).toUpperCase()}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">Name</Label>
+                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('projects.projectName')}</Label>
                   <Input
                     data-testid="project-name-input"
                     value={formData.name}
@@ -171,7 +173,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">Description</Label>
+                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('projects.description')}</Label>
                   <Textarea
                     data-testid="project-description-input"
                     value={formData.description}
@@ -181,7 +183,7 @@ export default function ProjectsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">Status</Label>
+                    <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('projects.status')}</Label>
                     <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
                       <SelectTrigger data-testid="project-status-select" className="bg-[#121212] border-[#27272A] text-white rounded-sm">
                         <SelectValue />
@@ -189,14 +191,14 @@ export default function ProjectsPage() {
                       <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
                         {statusOptions.map(opt => (
                           <SelectItem key={opt.value} value={opt.value || "none"} className="text-white hover:bg-[#121212]">
-                            {opt.label}
+                            {t(opt.labelKey)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">Deadline</Label>
+                    <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('projects.deadline')}</Label>
                     <Input
                       type="date"
                       data-testid="project-deadline-input"
@@ -207,7 +209,7 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">Budget (USD)</Label>
+                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('projects.budget')} (USD)</Label>
                   <Input
                     type="number"
                     data-testid="project-budget-input"
@@ -217,7 +219,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <Button type="submit" data-testid="project-submit-btn" className="w-full bg-[#D4AF37] text-black font-bold uppercase tracking-wider hover:bg-[#B5952F] rounded-sm">
-                  {editingProject ? 'Update Project' : 'Create Project'}
+                  {editingProject ? t('projects.updateProject') : t('projects.createProject')}
                 </Button>
               </form>
             </DialogContent>
@@ -233,19 +235,19 @@ export default function ProjectsPage() {
             data-testid="project-search-input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects..."
+            placeholder={t('projects.searchProjects')}
             className="pl-9 bg-[#121212] border-[#27272A] text-white placeholder:text-[#52525B] focus:border-[#D4AF37] rounded-sm"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger data-testid="project-filter-status" className="w-full sm:w-48 bg-[#121212] border-[#27272A] text-white rounded-sm">
-            <SelectValue placeholder="All Status" />
+            <SelectValue placeholder={`${t('common.all')} ${t('projects.status')}`} />
           </SelectTrigger>
           <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
-            <SelectItem value="all" className="text-white hover:bg-[#121212]">All Status</SelectItem>
+            <SelectItem value="all" className="text-white hover:bg-[#121212]">{`${t('common.all')} ${t('projects.status')}`}</SelectItem>
             {statusOptions.map(opt => (
               <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-[#121212]">
-                {opt.label}
+                {t(opt.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -262,7 +264,7 @@ export default function ProjectsPage() {
       ) : filteredProjects.length === 0 ? (
         <div className="text-center py-12">
           <FolderKanban size={48} className="mx-auto text-[#27272A] mb-4" />
-          <p className="text-[#52525B]">No projects found</p>
+          <p className="text-[#52525B]">{t('projects.noProjects')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -296,7 +298,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
               <h3 className="text-lg font-rajdhani font-bold text-white mb-2 tracking-wide">{project.name}</h3>
-              <p className="text-[#A1A1AA] text-sm line-clamp-2 mb-4">{project.description || 'No description'}</p>
+              <p className="text-[#A1A1AA] text-sm line-clamp-2 mb-4">{project.description || t('projects.noDescription')}</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center gap-1.5 text-[#52525B]">
                   <Calendar size={12} />
@@ -304,7 +306,7 @@ export default function ProjectsPage() {
                 </div>
                 <div className="flex items-center gap-1.5 text-[#52525B]">
                   <Users size={12} />
-                  <span>{project.team_members?.length || 0} members</span>
+                  <span>{project.team_members?.length || 0} {t('projects.members')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[#D4AF37] col-span-2">
                   <DollarSign size={12} />

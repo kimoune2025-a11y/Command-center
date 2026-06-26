@@ -101,6 +101,7 @@ function App() {
           <AppRoutes />
           <Toaster 
             position="top-right"
+            duration={2500}
             toastOptions={{
               style: {
                 background: '#0A0A0A',
