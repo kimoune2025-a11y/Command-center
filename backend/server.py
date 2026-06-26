@@ -75,6 +75,7 @@ class ProjectCreate(BaseModel):
     deadline: Optional[str] = None
     team_members: List[str] = []
     budget: float = 0.0
+    entity_id: Optional[str] = None
 
 class ProjectResponse(BaseModel):
     id: str
@@ -84,6 +85,7 @@ class ProjectResponse(BaseModel):
     deadline: Optional[str]
     team_members: List[str]
     budget: float
+    entity_id: Optional[str] = None
     created_by: str
     created_at: str
 
@@ -198,6 +200,21 @@ class KPIResponse(BaseModel):
     category: str
     target: Optional[float]
     period: str
+    created_by: str
+    created_at: str
+
+class EntityCreate(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    type: str = "other"
+    color: str = "#D4AF37"
+
+class EntityResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    type: str
+    color: str
     created_by: str
     created_at: str
 
@@ -641,6 +658,46 @@ async def get_dashboard_stats(user: dict = Depends(get_current_user)):
         "upcoming_events": upcoming_events,
         "recent_tasks": recent_tasks
     }
+
+# ============== ENTITY ROUTES ==============
+
+@api_router.post("/entities", response_model=EntityResponse)
+async def create_entity(entity: EntityCreate, user: dict = Depends(check_role(["admin", "manager"]))):
+    entity_id = str(uuid.uuid4())
+    entity_doc = {
+        "id": entity_id,
+        **entity.model_dump(),
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.entities.insert_one(entity_doc)
+    return EntityResponse(**{k: v for k, v in entity_doc.items() if k != "_id"})
+
+@api_router.get("/entities", response_model=List[EntityResponse])
+async def get_entities(user: dict = Depends(get_current_user)):
+    entities = await db.entities.find({}, {"_id": 0}).to_list(1000)
+    return [EntityResponse(**e) for e in entities]
+
+@api_router.get("/entities/{entity_id}", response_model=EntityResponse)
+async def get_entity(entity_id: str, user: dict = Depends(get_current_user)):
+    entity = await db.entities.find_one({"id": entity_id}, {"_id": 0})
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    return EntityResponse(**entity)
+
+@api_router.put("/entities/{entity_id}", response_model=EntityResponse)
+async def update_entity(entity_id: str, entity: EntityCreate, user: dict = Depends(check_role(["admin", "manager"]))):
+    await db.entities.update_one({"id": entity_id}, {"$set": entity.model_dump(exclude_none=True)})
+    updated = await db.entities.find_one({"id": entity_id}, {"_id": 0})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    return EntityResponse(**updated)
+
+@api_router.delete("/entities/{entity_id}")
+async def delete_entity(entity_id: str, user: dict = Depends(check_role(["admin"]))):
+    await db.entities.delete_one({"id": entity_id})
+    await db.projects.update_many({"entity_id": entity_id}, {"$set": {"entity_id": None}})
+    return {"message": "Entity deleted"}
 
 # Include the router
 app.include_router(api_router)

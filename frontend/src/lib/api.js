@@ -25,6 +25,15 @@ export const projectsAPI = {
   delete: (id) => axios.delete(`${API}/projects/${id}`),
 };
 
+// Entities API
+export const entitiesAPI = {
+  getAll: () => axios.get(`${API}/entities`),
+  getOne: (id) => axios.get(`${API}/entities/${id}`),
+  create: (data) => axios.post(`${API}/entities`, data),
+  update: (id, data) => axios.put(`${API}/entities/${id}`, data),
+  delete: (id) => axios.delete(`${API}/entities/${id}`),
+};
+
 // Tasks API
 export const tasksAPI = {
   getAll: (projectId) => axios.get(`${API}/tasks${projectId ? `?project_id=${projectId}` : ''}`),
@@ -91,6 +100,7 @@ export default {
   auth: authAPI,
   users: usersAPI,
   projects: projectsAPI,
+  entities: entitiesAPI,
   tasks: tasksAPI,
   finance: financeAPI,
   contacts: contactsAPI,

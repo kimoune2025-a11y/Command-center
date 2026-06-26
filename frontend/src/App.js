@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectsPage from "./pages/ProjectsPage";
+import EntitiesPage from "./pages/EntitiesPage";
 import TasksPage from "./pages/TasksPage";
 import FinancePage from "./pages/FinancePage";
 import ContactsPage from "./pages/ContactsPage";
@@ -76,6 +77,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="entities" element={<EntitiesPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="finance" element={<FinancePage />} />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { projectsAPI } from '../lib/api';
+import { projectsAPI, entitiesAPI } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -23,9 +23,11 @@ export default function ProjectsPage() {
   const { canCreate, canDelete } = useAuth();
   const { t } = useLanguage();
   const [projects, setProjects] = useState([]);
+  const [entities, setEntities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [entityFilter, setEntityFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [formData, setFormData] = useState({
@@ -34,7 +36,8 @@ export default function ProjectsPage() {
     status: 'planning',
     deadline: '',
     team_members: [],
-    budget: 0
+    budget: 0,
+    entity_id: ''
   });
 
   useEffect(() => {
@@ -43,8 +46,12 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
-      const response = await projectsAPI.getAll();
-      setProjects(response.data);
+      const [projectsRes, entitiesRes] = await Promise.all([
+        projectsAPI.getAll(),
+        entitiesAPI.getAll()
+      ]);
+      setProjects(projectsRes.data);
+      setEntities(entitiesRes.data);
     } catch (error) {
       toast.error('Failed to fetch projects');
     } finally {
@@ -55,11 +62,13 @@ export default function ProjectsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const data = { ...formData };
+      if (data.entity_id === 'none' || !data.entity_id) data.entity_id = null;
       if (editingProject) {
-        await projectsAPI.update(editingProject.id, formData);
+        await projectsAPI.update(editingProject.id, data);
         toast.success('Project updated');
       } else {
-        await projectsAPI.create(formData);
+        await projectsAPI.create(data);
         toast.success('Project created');
       }
       setDialogOpen(false);
@@ -78,7 +87,8 @@ export default function ProjectsPage() {
       status: project.status,
       deadline: project.deadline || '',
       team_members: project.team_members || [],
-      budget: project.budget
+      budget: project.budget,
+      entity_id: project.entity_id || ''
     });
     setDialogOpen(true);
   };
@@ -102,7 +112,8 @@ export default function ProjectsPage() {
       status: 'planning',
       deadline: '',
       team_members: [],
-      budget: 0
+      budget: 0,
+      entity_id: ''
     });
   };
 
@@ -110,8 +121,11 @@ export default function ProjectsPage() {
     const matchesSearch = project.name.toLowerCase().includes(search.toLowerCase()) ||
                          project.description.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesEntity = entityFilter === 'all' || project.entity_id === entityFilter;
+    return matchesSearch && matchesStatus && matchesEntity;
   });
+
+  const getEntity = (entityId) => entities.find(e => e.id === entityId);
 
   const getStatusBadge = (status) => {
     const option = statusOptions.find(o => o.value === status);
@@ -209,6 +223,22 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('entities.entity')}</Label>
+                  <Select value={formData.entity_id || 'none'} onValueChange={(v) => setFormData({ ...formData, entity_id: v === 'none' ? '' : v })}>
+                    <SelectTrigger data-testid="project-entity-select" className="bg-[#121212] border-[#27272A] text-white rounded-sm">
+                      <SelectValue placeholder={t('entities.noEntity')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
+                      <SelectItem value="none" className="text-white hover:bg-[#121212]">{t('entities.noEntity')}</SelectItem>
+                      {entities.map(ent => (
+                        <SelectItem key={ent.id} value={ent.id} className="text-white hover:bg-[#121212]">
+                          {ent.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label className="text-[#A1A1AA] text-xs uppercase tracking-wider">{t('projects.budget')} (USD)</Label>
                   <Input
                     type="number"
@@ -248,6 +278,19 @@ export default function ProjectsPage() {
             {statusOptions.map(opt => (
               <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-[#121212]">
                 {t(opt.labelKey)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={entityFilter} onValueChange={setEntityFilter}>
+          <SelectTrigger data-testid="project-filter-entity" className="w-full sm:w-48 bg-[#121212] border-[#27272A] text-white rounded-sm">
+            <SelectValue placeholder={t('entities.allEntities')} />
+          </SelectTrigger>
+          <SelectContent className="bg-[#0A0A0A] border-[#27272A]">
+            <SelectItem value="all" className="text-white hover:bg-[#121212]">{t('entities.allEntities')}</SelectItem>
+            {entities.map(ent => (
+              <SelectItem key={ent.id} value={ent.id} className="text-white hover:bg-[#121212]">
+                {ent.name}
               </SelectItem>
             ))}
           </SelectContent>

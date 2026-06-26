@@ -1,0 +1,87 @@
+{
+  "summary": "Tested the new ENTITIES module (incremental P1 feature). Backend: 15/15 new entity tests pass (CRUD, project linking, unlink-on-delete, RBAC). Full regression: 29/29 previous suite still passes (Finance PUT bug from iteration_2 is now FIXED). Frontend: /entities page renders correctly in FR with type badges (HOLDING/STUDIO/AUTRE), color accent stripe, project counts, create/edit/delete flows all wired, data-testids present. Projects page entity selector & filter work, linking via API confirmed (filter narrows list to 1 when CVLN Holding selected). Regression: all 8 existing modules + /entities load successfully via testid. CRITICAL UI BUG: ProjectsPage.jsx never renders project-entity-badge-{id} on project cards even though the project has entity_id set. Code inspection of /app/frontend/src/pages/ProjectsPage.jsx (lines ~316-360) confirms the card JSX has status badge, name, description, date/members/budget but NO entity badge element. Also confirmed Iteration_2 layout issue persists: language-switcher (x:1773-1896) overlaps create-entity-btn (x:1683.5-1880) and NOUVEAU PROJET button, causing click misdirection.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ProjectsPage project card",
+        "issue": "Required project-entity-badge-{id} element is NEVER rendered on project cards. Tested with a project linked to CVLN Holding (entity_id verified set via API); card shows status badge + name + description + meta but no entity badge. Code at /app/frontend/src/pages/ProjectsPage.jsx ~lines 316-360 has no badge JSX referencing project.entity_id or getEntity(project.entity_id).",
+        "selector": "[data-testid^='project-entity-badge-']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Header layout (Entities & Projects pages)",
+        "issue": "Language-switcher button (top-right, x:1773-1896, w:123 h:32) overlaps the gold action button NOUVELLE ENTITÉ / NOUVEAU PROJET (x:1683.5-1880, w:196.5 h:36). The language switcher sits on top of the right ~107px of the action button so clicks in that zone open the language menu instead of the dialog. Repro: click 'NOUVELLE ENTITÉ' near its right edge -> language dropdown opens. Same overlap noted in iteration_2 (sonner toast issue is separate and additive).",
+        "selector": "[data-testid='create-entity-btn'] vs [data-testid='language-switcher']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "EntitiesPage",
+        "issues": [
+          "Entity card 'X projets' uses raw key word; in EN this will render 'X projects' once switched. Acceptable but a tCount(plural) helper would be cleaner.",
+          "Type 'Autre' badge ok but consider distinct color for 'other' (currently default gold #D4AF37 close to header)."
+        ]
+      }
+    ]
+  },
+  "passed_tests": [
+    "POST /api/entities (admin) returns 200 with id, name, type, color",
+    "GET /api/entities lists pre-seeded CVLN Holding + Factory Maker Studio",
+    "GET /api/entities/{id} returns entity; GET nonexistent returns 404",
+    "PUT /api/entities/{id} updates name/type/color",
+    "DELETE /api/entities/{id} unlinks all projects (verified: project entity_id becomes null after entity deletion)",
+    "POST /api/projects with entity_id links project; GET returns entity_id; PUT with entity_id=null unlinks; PUT re-link works",
+    "RBAC: viewer POST/DELETE /api/entities -> 403",
+    "RBAC: manager POST/PUT allowed; manager DELETE -> 403; only admin can delete",
+    "Frontend /entities page loads with data-testid='entities-page'; renders pre-seeded entity cards with type badge + color accent + 'X projets' count",
+    "create-entity-btn opens dialog with entity-name-input/description/type-select/color-picker/submit-btn testids (verified)",
+    "Entity create via UI persists (3 entities after submit); type 'autre' default applied when select not changed",
+    "edit-entity-{id} opens dialog with name prefilled to current value",
+    "delete-entity-{id} triggers confirm dialog and removes entity from list",
+    "Projects page: project-filter-entity renders with options [Toutes les entités, CVLN Holding, Factory Maker Studio]; selecting CVLN Holding narrows list to 1 linked project",
+    "Project create/edit dialog has project-entity-select with options [Aucune entité, CVLN Holding, Factory Maker Studio]",
+    "i18n FR by default: ENTITÉS, NOUVELLE ENTITÉ, Aucune entité, Toutes les entités, Rechercher des entités... all rendered",
+    "Regression: all 9 pages load via data-testid (dashboard, projects, tasks, finance, contacts, events, documents, kpis, entities)",
+    "Backend regression: 29/29 pytest tests in test_cvln_api.py pass including Finance PUT (previously HIGH bug fixed)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_entities_api.py",
+    "/app/backend/tests/test_cvln_api.py",
+    "/app/test_reports/pytest/entities_results.xml",
+    "/app/test_reports/pytest/regression_results.xml"
+  ],
+  "action_items": [
+    "HIGH: Render project-entity-badge-{project.id} in ProjectsPage.jsx project card JSX. Look up entity via getEntity(project.entity_id) and render <span data-testid={`project-entity-badge-${project.id}`} style={{background: entity.color+'33', borderColor: entity.color, color: entity.color}}>{entity.name}</span> in the card header next to status badge, only when project.entity_id is set.",
+    "HIGH: Fix top-right header overlap. Either (a) wrap NOUVELLE ENTITÉ / NOUVEAU PROJET buttons in a flex container with the language-switcher with proper gap, OR (b) absolute-position language-switcher to top:24 right:24 and shift the action button to right:160. Current absolute layout causes language-switcher to sit on top of the action button (verified bounding rects overlap by ~107px).",
+    "MEDIUM: Add data-testid to language switcher menu items (e.g., data-testid='lang-en' / 'lang-fr') so EN/FR translations can be reliably toggled in automation. Currently menu items lack stable selectors and don't expose role='menuitem'.",
+    "LOW: Consider using exclude_none=True for update_project (server.py) so omitting entity_id in payload doesn't null out the link unintentionally; currently linking works because frontend always sends entity_id (string or null)."
+  ],
+  "critical_code_review_comments": [
+    "ProjectsPage.jsx is missing the project-entity-badge render despite the test plan explicitly requiring it; the data-testid exists in spec but no JSX produces it (HIGH).",
+    "Header in EntitiesPage & ProjectsPage uses absolutely-positioned language-switcher that overlaps the gold action button - this is a layout regression that affects two pages and likely every page with a top-right CTA.",
+    "server.py update_entity uses model_dump(exclude_none=True) which is good, but other update_* endpoints (project/task/finance/contact/event/kpi) still use model_dump() raw - same null-out risk that caused iteration_2's Finance bug remains for those entities.",
+    "delete_entity deletes the entity then unlinks projects in two operations; if the unlink fails mid-flight the entity is already gone. Wrap in a try/except or run unlink first.",
+    "server.py is now 725 lines monolithic (was 668 + 57 for entities); strongly recommend splitting routes per resource."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_entities_api.py (new)",
+    "/app/test_reports/pytest/entities_results.xml (new)",
+    "/app/test_reports/pytest/regression_results.xml (refresh)"
+  ],
+  "success_rate": {
+    "backend": "100% (44/44 pytest tests: 15 new entity + 29 regression)",
+    "frontend": "85% (entities page + dialog + filter + linking all wired; missing project-entity-badge on cards + header overlap = 2 HIGH bugs)"
+  },
+  "test_credentials": "Admin: cvlgroupe@hotmail.com / CVLN@dmin2026! (verified)",
+  "seed_data_creation": "Tests prefix records with TEST_ and clean up via DELETE inside the same test class. Final test_zz_cleanup deletes any remaining TEST_-prefixed entities. Two viewer/manager users (TEST_viewer_*, TEST_manager_*) remain in DB after RBAC test (no admin delete-user endpoint).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend entity CRUD + project linking + unlink-on-delete + RBAC fully validated (15 pytest cases). Finance PUT regression is now fixed. The two open issues are purely frontend: (1) ProjectsPage.jsx missing project-entity-badge-{id} JSX on project cards - inspect /app/frontend/src/pages/ProjectsPage.jsx around line 316-360 where the card is rendered; (2) language-switcher absolute positioning overlaps the top-right gold action buttons across Entities/Projects pages causing click misdirection. After fix, retest by creating a project with entity_id and verifying the badge appears + clicking the action button near its right edge to verify it opens the dialog, not the language menu. EN translations for entities.* keys EXIST in /app/frontend/src/lib/translations.js so once the language switcher click is reliable, EN switch should work.",
+  "rca_of_the_issue": "ProjectsPage missing badge: requirement spec called for project-entity-badge-{id} on project cards but during implementation only the dialog/filter were wired up; the card JSX was never updated. Layout overlap: language-switcher in the page header uses absolute positioning (or has no flex sibling with sufficient spacing) so it stacks on top of the gold action button when both are anchored top-right - happens because both use right-aligned positioning without coordinated horizontal offsets."
+}
