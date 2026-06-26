@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { Toaster } from 'sonner';
 
 export const MainLayout = () => {
   return (
@@ -17,21 +16,10 @@ export const MainLayout = () => {
       <Sidebar />
       
       <main className="lg:ml-60 min-h-screen p-4 lg:p-6" data-testid="main-content">
-        <div className="max-w-[1600px] mx-auto pt-14 lg:pt-0">
+        <div className="max-w-[1600px] mx-auto pt-14 lg:pt-16">
           <Outlet />
         </div>
       </main>
-
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#0A0A0A',
-            border: '1px solid #27272A',
-            color: '#FFFFFF',
-          },
-        }}
-      />
     </div>
   );
 };

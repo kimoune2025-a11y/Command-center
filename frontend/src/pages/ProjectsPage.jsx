@@ -318,7 +318,18 @@ export default function ProjectsPage() {
               className="bg-[#0A0A0A] border border-[#27272A] rounded-sm p-4 hover:border-[#D4AF37]/40 transition-colors duration-300 group"
             >
               <div className="flex items-start justify-between mb-3">
-                {getStatusBadge(project.status)}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {getStatusBadge(project.status)}
+                  {getEntity(project.entity_id) && (
+                    <span
+                      data-testid={`project-entity-badge-${project.id}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium uppercase tracking-wider"
+                      style={{ backgroundColor: `${getEntity(project.entity_id).color}20`, color: getEntity(project.entity_id).color }}
+                    >
+                      {getEntity(project.entity_id).name}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {canCreate() && (
                     <button

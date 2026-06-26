@@ -124,10 +124,16 @@
 - LanguageContext default set to French.
 - Verified via testing_agent (iteration_2): backend 28/29 then fixed, frontend all 8 modules OK.
 
+## Entities Module (P1) — June 2026 ✅ DONE
+- Backend: Entity model (name, description, type[holding/studio/label/agency/other], color) + full CRUD at /api/entities; entity_id added to Project create/response; delete-entity unlinks projects.
+- Frontend: EntitiesPage (CRUD, type select, color picker, project count, FR/EN i18n); Sidebar nav "Entités" (Building2); ProjectsPage entity selector + entity filter + entity badge on cards.
+- Fixed during QA: missing entity badge on project cards; language-switcher/CTA header overlap (added lg:pt-16, removed duplicate Toaster).
+- Verified via testing_agent (iteration_3): backend 44/44 pytest (15 entity + 29 regression), frontend flows OK.
+
 ## Backlog / Future Features
 
 ### Upcoming — Conglomerate Mode (strict incremental, after v1.0 stable)
-- [ ] P1 Entities module (CVLN Holding, Factory Maker Studio...): each project belongs to 1 entity. Model + CRUD + UI.
+- [x] P1 Entities module — DONE (June 2026)
 - [ ] P1 Board Pack page: read-only executive view (entity performance, top 10 priorities, risk summary, cash runway).
 - [ ] P1 Decisions module: log strategic decisions.
 - [ ] P1 Risks module: risk register.
