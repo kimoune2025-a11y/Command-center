@@ -6,7 +6,7 @@ const LanguageContext = createContext(null);
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
     const saved = localStorage.getItem('cvln_language');
-    return saved || navigator.language.split('-')[0] || 'en';
+    return saved || 'fr';
   });
 
   useEffect(() => {

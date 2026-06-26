@@ -1,0 +1,80 @@
+{
+  "summary": "Post-rollback verification of CVLN Command Center v1.0. Backend: 28/29 pytest cases pass (1 real bug in PUT /api/finance). Frontend: all 8 modules load with correct data-testid, dashboard stats display with no console errors, language switcher toggles FR<->EN correctly, default language is FR, RBAC enforced (registration forces viewer/manager, viewer gets 403 on POST /api/projects). No orphan imports for removed v1.2 components (GlobalSearch/KanbanBoard/AlertsPanel/ProjectTimeline confirmed absent via grep). Two issues discovered: (1) backend Finance UPDATE 500 when payload omits date; (2) ProjectsPage is not translated to French (renders English strings while sidebar/dashboard are FR).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "PUT /api/finance/{id}",
+        "issue": "500 ValidationError: when client sends FinanceCreate payload without 'date', $set writes date=None and re-validation of FinanceResponse fails (date is non-Optional in response). CREATE handles this with 'finance.date or now()' fallback, but UPDATE does not. Repro: PUT with {type, category, amount, description} only -> 500.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Sonner toast (Bon retour!)",
+        "issue": "Login success toast persists ~4-5s at top-right and its <li data-sonner-toast> overlay intercepts pointer events on top-right controls (language-switcher and 'Nouveau projet'/'New Project' button), causing user clicks to be eaten right after login. Workaround in tests: wait 5s before interacting.",
+        "selector": "[data-sonner-toast]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "ProjectsPage (and likely others) i18n gap",
+        "issues": [
+          "Header reads 'PROJECTS', '3 total projects', search placeholder 'Search projects...', filter 'All Status', button 'NEW PROJECT' even when active language is French. Sidebar and Dashboard are FR but Projects page strings are hard-coded English. Recommend audit of Tasks/Finance/Contacts/Events/Documents/KPIs pages for the same gap."
+        ]
+      }
+    ]
+  },
+  "passed_tests": [
+    "Admin login (cvlgroupe@hotmail.com) -> /dashboard with role=admin",
+    "GET /api/dashboard/stats: projects/tasks/contacts/events/finance(revenue/expenses/profit) all present",
+    "Projects CRUD via API (create/list/update/delete + GET-after-delete 404)",
+    "Tasks CRUD via API incl. status toggle to completed",
+    "Finance CREATE revenue+expense and DELETE (UPDATE fails - see backend_issues)",
+    "Contacts CRUD via API",
+    "Events CRUD via API",
+    "KPIs CRUD via API",
+    "Documents upload (multipart) + list + delete",
+    "RBAC: register as 'admin' role -> coerced to 'viewer'; viewer POST /api/projects -> 403",
+    "Auth /api/auth/me returns admin profile",
+    "Dashboard UI loads in FR with PROJETS/TÂCHES/CONTACTS/ÉVÉNEMENTS counts and REVENUS/DÉPENSES/BÉNÉFICE NET",
+    "All 8 page testids present: dashboard-page, projects-page, tasks-page, finance-page, contacts-page, events-page, documents-page, kpis-page",
+    "Language switcher toggles FR<->EN on dashboard and persists",
+    "Default language on fresh session is French (login screen in FR)",
+    "No browser console errors, no pageerror events captured during navigation across all modules",
+    "grep across /app/frontend/src for GlobalSearch|KanbanBoard|AlertsPanel|ProjectTimeline|weekly-summary|burn-rate|heatmap -> zero matches (rollback clean)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_cvln_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix PUT /api/finance/{id}: in update_finance, do {k:v for k,v in payload.items() if v is not None} OR mirror the create fallback (finance.date or existing record's date) so date is never written as None.",
+    "Translate ProjectsPage.jsx (and audit Tasks/Finance/Contacts/Events/Documents/KPIs pages) using LanguageContext so they respect the FR/EN toggle.",
+    "Lower Sonner toast duration to ~2s OR set toaster pointer-events:none on the wrapper and pointer-events:auto on the toast body, so it doesn't block clicks on adjacent top-right buttons (language switcher, 'Nouveau projet')."
+  ],
+  "critical_code_review_comments": [
+    "server.py update_finance/update_project/update_task/update_contact/update_event/update_kpi all use raw payload.model_dump() with $set - any future Optional[str]=None field added to a *Create model will silently null-out persisted values on update; consider exclude_none=True or a partial-update pattern.",
+    "server.py uses @app.on_event('shutdown') which is deprecated in FastAPI >=0.93; migrate to lifespan handler.",
+    "JWT_SECRET has an insecure default fallback in code ('cvln-command-center-secret-key-2024'); should require env var to be set and fail fast if missing.",
+    "server.py is 668 lines monolithic; consider splitting routes into modules per resource (projects.py, tasks.py, ...). Not blocking for v1.0 but recommended."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_cvln_api.py (new)",
+    "/app/test_reports/pytest/pytest_results.xml (new)"
+  ],
+  "success_rate": {
+    "backend": "96.5% (28/29 pytest tests)",
+    "frontend": "90% (all pages load, all flows wired; 2 cosmetic/UX defects)"
+  },
+  "test_credentials": "Admin: cvlgroupe@hotmail.com / CVLN@dmin2026! (verified working, role=admin)",
+  "seed_data_creation": "Tests prefix all created records with 'TEST_' and clean up via DELETE in same test class. Two ephemeral viewer users created via /api/auth/register during RBAC test remain in DB (no DELETE since admin-only and not retrieved); recommend cleanup script if desired.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend rollback is clean; only the Finance PUT 'date' bug needs verification after fix. Use the pytest suite at /app/backend/tests/test_cvln_api.py for regression. For UI: the Sonner toast intercepts pointer events on top-right buttons - always wait ~5s after login before interacting with top-right region OR force=True. Default language is FR; ProjectsPage labels remain English (open i18n bug).",
+  "rca_of_the_issue": "Finance UPDATE 500: update_finance writes finance.model_dump() with $set unconditionally; FinanceCreate.date is Optional[str]=None, but FinanceResponse.date is required str. When the client omits date, $set persists null, then find_one returns a doc with date=None which FinanceResponse rejects during response serialization. Mitigation: either (a) use payload.model_dump(exclude_none=True), (b) keep the create-style fallback `finance.date or existing['date'] or now()`, or (c) make FinanceResponse.date Optional[str] and let the frontend handle nulls."
+}
