@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import uuid
 
 class CVLNCommandCenterTester:
-    def __init__(self, base_url="https://creative-hub-489.preview.emergentagent.com"):
+    def __init__(self, base_url="https://command-center-524.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.admin_token = None

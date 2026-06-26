@@ -1,0 +1,205 @@
+<analysis>original_problem_statement: Build a full-stack internal dashboard app called “CVLN Command Center”. A private command center to manage multiple projects, events, finances, and partners for a creative conglomerate. Features include Overview dashboard, Projects module, Task manager, Finance module, Contacts CRM, Events module, Document manager, and KPI dashboard. Requires basic role-based access (Admin, Manager, Viewer), MongoDB database, local file storage for v1, and a modern dark dashboard design (minimalist, futuristic, #050505 bg, #D4AF37 gold accent).
+
+**User's preferred language**: French (INSTRUCT next agent to respond in the user's preferred language only: French)
+
+**what currently exists?** 
+A v1.0 stable application was built containing JWT auth, RBAC, 8 core modules, and French/English multilingual support. However, the previous agent attempted a massive, non-incremental refactor to add v1.1/v1.2 features (Conglomerate Mode), which overwrote core files and destabilized the build. The user has ordered a strict P0 rollback to restore the stable v1.0 state before proceeding with strictly incremental upgrades.
+
+**Last working item**: 
+    - Last item agent was working: P0 Rollback to stable v1.0. The agent was instructed to revert  and frontend pages overwritten by the v1.2 attempt, delete unused v1.2 UI components, fix a known Select bug, and run end-to-end tests before starting any incremental upgrades. The agent acknowledged the command but did not execute it before the session ended.
+    - Status: NOT STARTED
+    - Agent Testing Done: N
+    - Which testing method agent to use? both (testing_agent_v3 is MANDATORY after the rollback is complete)
+    - User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  - Issue 1: Massive refactor destabilized the app (P0 Rollback Required)
+     - Attempted fixes: Agent acknowledged the issue but hasn't acted yet.
+     - Next debug checklist: Revert , , , and  to their last known working v1.0 state using git checkout or manual reversion. Delete unused v1.2 components (, , , ).
+     - Why fix this issue and what will be achieved with the fix? Restores the application to a functional v1.0 state, fulfilling the user's mandatory prerequisite before adding new features.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on other issue: None
+  - Issue 2: Shadcn Select empty string crash
+     - Attempted fixes: Agent previously fixed it in some files but the user reported it needs to be fixed across *all* forms.
+     - Next debug checklist: Check all forms using Shadcn Select. Remove placeholder   and use  instead. Ensure submit handlers convert  to /empty string before sending to backend.
+     - Why fix this issue and what will be achieved with the fix? Prevents React/Radix UI crashes when rendering empty SelectItem values.
+     - Status: NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? frontend
+     - Blocked on other issue: Issue 1 (Rollback first)
+
+**In progress Task List**:
+  - Task 1: P0 — EXECUTE ROLLBACK TO STABLE v1.0
+     - Where to resume: Identify the last stable git commit before the v1.2 updates or manually revert  and the 3 frontend pages. Delete , , , and .
+     - What will be achieved with this? Stable baseline.
+     - Status: NOT STARTED
+     - Should Test frontend/backend/both after fix? both (testing_agent_v3 is required)
+     - Blocked on something: None
+
+**Upcoming and Future Tasks**
+  Upcoming Tasks (Strict incremental order requested by user AFTER rollback & tests pass):
+  1. (P1) Entities module: Add Entities (CVLN Holding, Factory Maker Studio, etc.). Each project must belong to 1 entity. Add data model + CRUD + UI.
+  2. (P1) Board Pack page: Read-only executive view with Entity performance, Top 10 priorities, Risk summary, Cash runway, etc.
+  3. (P1) Decisions module: Log strategic decisions.
+  4. (P1) Risks module: Risk register.
+  5. (P2) Audit logs: Immutable global audit log for all actions.
+  6. (P2) Alerts automation: Overdue tasks, budget alerts, etc.
+  7. (P2) Global search: Search across projects, tasks, contacts, documents.
+
+**Completed work in this session**
+- JWT Auth System & RBAC (Admin, Manager, Viewer)
+- v1.0 CRUD Modules (Projects, Tasks, Finance, Contacts, Events, Documents, KPIs)
+- Multilingual Support (French & English) using Context API
+- Locked registration to Viewer role only
+
+**Earlier issues found/mentioned but not fixed**
+   - Issue 1: Form submission handlers not properly converting none back to null/empty string for Shadcn Select components.
+   - Debug checklist: Review all frontend CRUD forms using Select.
+   - Why to solve this issue and what will be achieved with this? Prevents invalid data (none) from being saved to the database.
+   - Should Test frontend/backend/both after fix: frontend
+   - Is recurring issue? Y
+
+**Known issue recurrence from previous fork**
+  - Issue recurrence in previous fork: NA
+  - Recurrence count: 0
+  - Status: NA
+
+**Code Architecture**
+/app/
+├── backend/
+│   ├── server.py (FastAPI, Models, Endpoints)
+│   └── .env
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Layout/ (Sidebar, MainLayout, LanguageSwitcher)
+│   │   │   ├── ui/ (Shadcn components)
+│   │   ├── context/ (AuthContext, LanguageContext)
+│   │   ├── lib/ (api.js, translations.js)
+│   │   ├── pages/ (LoginPage, RegisterPage, DashboardPage, ProjectsPage, etc.)
+│   │   ├── App.js
+│   │   └── index.css
+└── memory/
+    └── PRD.md
+
+**Key Technical Concepts**
+Frontend: React, TailwindCSS, Shadcn UI, Context API
+Backend: FastAPI, JWT Authentication, Motor (Async MongoDB)
+Database: MongoDB
+Architecture: Full-stack Docker/Kubernetes setup via supervisor.
+
+**key DB schema**
+  - users: {{email, full_name, hashed_password, role (admin/manager/viewer), created_at}}
+  - projects: {{title, description, status, budget, deadline, created_at, created_by}}
+  - tasks: {{title, description, project_id, priority, deadline, status, assigned_to}}
+  - finance: {{type (revenue/expense), amount, category, project_id, date, description}}
+  - contacts: {{name, organization, role, email, phone, type}}
+  - events: {{title, date, location, description, project_id, status}}
+
+**changes in tech stack**
+  - None
+
+**All files of reference**
+-  (Main backend logic, needs reverting)
+-  (Needs reverting)
+-  (Needs reverting)
+-  (Needs reverting)
+- Unused v1.2 files to delete:
+  - 
+  - 
+  - 
+  - 
+
+**Areas that need refactoring**
+- The massive refactor introduced incomplete logic. Rollback is prioritized over refactoring.
+
+**key api endpoints**
+- , , 
+- , , , , 
+
+**Critical Info for New Agent**
+- **STRICT DIRECTIVE:** You MUST execute the P0 rollback first using usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
+
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system. or manual reversion. Do not attempt to fix or continue the v1.2 refactor.
+- After rollback, run  to verify the v1.0 app works end-to-end.
+- ONLY after tests pass, implement features strictly **one at a time** (incremental), running tests after each phase. Do not break the working build.
+- Maintain the French default language and the FR/EN language switcher.
+- Never use npm, use yarn. Always use supervisorctl to restart services.
+
+**documents and test reports created in this job**
+  - /app/memory/PRD.md
+  - /app/test_reports/iteration_1.json
+
+**Last 10 User Messages and any pending HUMAN messages** 
+1. (Latest) User explicitly commanded to STOP the massive refactor. P0 Priority to restore stability (v1.0), undo partial v1.2 overwrites, delete v1.2 components, fix Select bug, and test via testing_agent_v3 before proceeding with incremental steps. (Pending Execution)
+2. User provided comprehensive automation requirements (Task, CRM, Finance, Event, Executive, Backup, Notification automation) for v1.2. (Deferred until rollback)
+3. User provided security/traceability requirements (Audit Trail, Timeline, Versioning, Security Layer, Backups) for v1.2. (Deferred until rollback)
+4. User provided Conglomerate Mode requirements (Entities, Board Pack, Decision Log, Risk Register, Kanban tasks, CRM upgrades) for v1.1. (Deferred until rollback)
+5. User provided an initial feature list for v1.1 (Project hierarchy, Kanban tasks, smart dashboard, decisions log, CRM upgrades, Event logistics, Alerts, Global search). (Deferred until rollback)
+6. User asked if data is connected everywhere. (Agent confirmed yes).
+7. User restricted registration so only the Viewer role can be selected on signup. (Completed)
+8. User asked for multi-language support (French/English). (Completed)
+9. User verified login page. (Completed)
+10. User provided core setup answers (JWT, MongoDB, Basic roles, Local storage, Gold accent). (Completed)
+
+**Project Health Check:**
+Broken (Backend and frontend currently in an intermediate, unstable state due to interrupted massive refactor).
+
+**3rd Party Integrations**
+- None currently implemented.
+
+**Testing status**
+  - Testing agent used after significant changes: YES (For initial v1.0 completion)
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: 
+  - Known regressions: v1.0 features broken by v1.2 refactor attempt.
+
+**Credentials to test flow:**
+- Admin User: admin@cvln.com (Password: Password123! - assuming standard defaults, check DB or register a new one to test as the agent did not log the exact registration credentials used).
+
+**What agent forgot to execute**
+The agent acknowledged the user's strict P0 rollback command but failed to run the git commands or file rewrites/deletions to actually execute the rollback before finishing its turn. You must perform the rollback immediately.</analysis>
