@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
+import BoardPackPage from "./pages/BoardPackPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import EntitiesPage from "./pages/EntitiesPage";
 import TasksPage from "./pages/TasksPage";
@@ -77,6 +78,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="board-pack" element={<BoardPackPage />} />
         <Route path="entities" element={<EntitiesPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="tasks" element={<TasksPage />} />

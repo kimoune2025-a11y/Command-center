@@ -96,6 +96,11 @@ export const dashboardAPI = {
   getStats: () => axios.get(`${API}/dashboard/stats`),
 };
 
+// Board Pack API
+export const boardPackAPI = {
+  get: () => axios.get(`${API}/board-pack`),
+};
+
 export default {
   auth: authAPI,
   users: usersAPI,

@@ -699,6 +699,128 @@ async def delete_entity(entity_id: str, user: dict = Depends(check_role(["admin"
     await db.projects.update_many({"entity_id": entity_id}, {"$set": {"entity_id": None}})
     return {"message": "Entity deleted"}
 
+# ============== BOARD PACK ROUTE ==============
+
+@api_router.get("/board-pack")
+async def get_board_pack(user: dict = Depends(get_current_user)):
+    entities = await db.entities.find({}, {"_id": 0}).to_list(1000)
+    projects = await db.projects.find({}, {"_id": 0}).to_list(5000)
+    tasks = await db.tasks.find({}, {"_id": 0}).to_list(10000)
+    finance = await db.finance.find({}, {"_id": 0}).to_list(10000)
+
+    project_to_entity = {p["id"]: p.get("entity_id") for p in projects}
+    project_names = {p["id"]: p["name"] for p in projects}
+    entity_names = {e["id"]: e["name"] for e in entities}
+
+    # Per-entity aggregation
+    def empty_perf():
+        return {"projects_count": 0, "total_budget": 0.0, "revenue": 0.0, "expenses": 0.0, "profit": 0.0}
+
+    perf = {e["id"]: empty_perf() for e in entities}
+    unassigned = empty_perf()
+
+    for p in projects:
+        eid = p.get("entity_id")
+        bucket = perf.get(eid) if eid in perf else unassigned
+        bucket["projects_count"] += 1
+        bucket["total_budget"] += float(p.get("budget") or 0)
+
+    for f in finance:
+        eid = project_to_entity.get(f.get("project_id"))
+        bucket = perf.get(eid) if eid in perf else unassigned
+        amount = float(f.get("amount") or 0)
+        if f.get("type") == "revenue":
+            bucket["revenue"] += amount
+        elif f.get("type") == "expense":
+            bucket["expenses"] += amount
+
+    entity_perf = []
+    for e in entities:
+        b = perf[e["id"]]
+        b["profit"] = b["revenue"] - b["expenses"]
+        entity_perf.append({
+            "id": e["id"], "name": e["name"], "type": e["type"], "color": e["color"],
+            **b
+        })
+    unassigned["profit"] = unassigned["revenue"] - unassigned["expenses"]
+
+    # Top 10 priorities (open tasks)
+    priority_weight = {"urgent": 4, "high": 3, "medium": 2, "low": 1}
+    open_tasks = [t for t in tasks if t.get("status") != "completed"]
+
+    def task_sort_key(t):
+        return (-priority_weight.get(t.get("priority"), 0), t.get("deadline") or "9999-12-31")
+
+    open_tasks.sort(key=task_sort_key)
+    top_priorities = []
+    for t in open_tasks[:10]:
+        eid = project_to_entity.get(t.get("project_id"))
+        top_priorities.append({
+            "id": t["id"], "title": t["title"], "priority": t.get("priority"),
+            "status": t.get("status"), "deadline": t.get("deadline"),
+            "project_name": project_names.get(t.get("project_id")),
+            "entity_name": entity_names.get(eid) if eid else None
+        })
+
+    # Risk summary (derived)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    overdue_tasks = [t for t in open_tasks if t.get("deadline") and t["deadline"] < now_iso]
+    projects_on_hold = [p for p in projects if p.get("status") == "on_hold"]
+    over_budget = [ep for ep in entity_perf if ep["total_budget"] > 0 and ep["expenses"] > ep["total_budget"]]
+
+    total_revenue = sum(float(f.get("amount") or 0) for f in finance if f.get("type") == "revenue")
+    total_expenses = sum(float(f.get("amount") or 0) for f in finance if f.get("type") == "expense")
+    net_cash = total_revenue - total_expenses
+
+    risk_items = []
+    for t in overdue_tasks[:5]:
+        risk_items.append({"type": "overdue_task", "label": t["title"], "severity": "high"})
+    for p in projects_on_hold[:5]:
+        risk_items.append({"type": "project_on_hold", "label": p["name"], "severity": "medium"})
+    for ep in over_budget[:5]:
+        risk_items.append({"type": "over_budget", "label": ep["name"], "severity": "high"})
+    if net_cash < 0:
+        risk_items.append({"type": "negative_cashflow", "label": "Net cash negative", "severity": "high"})
+
+    risk_summary = {
+        "overdue_tasks": len(overdue_tasks),
+        "projects_on_hold": len(projects_on_hold),
+        "over_budget_entities": len(over_budget),
+        "negative_cashflow": net_cash < 0,
+        "items": risk_items
+    }
+
+    # Treasury / cash runway
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    monthly_burn = sum(
+        float(f.get("amount") or 0) for f in finance
+        if f.get("type") == "expense" and (f.get("date") or "") >= thirty_days_ago
+    )
+    runway_months = None
+    if monthly_burn > 0 and net_cash > 0:
+        runway_months = round(net_cash / monthly_burn, 1)
+
+    treasury = {
+        "total_revenue": total_revenue,
+        "total_expenses": total_expenses,
+        "net_cash": net_cash,
+        "monthly_burn": monthly_burn,
+        "runway_months": runway_months
+    }
+
+    return {
+        "entity_performance": entity_perf,
+        "unassigned": unassigned,
+        "top_priorities": top_priorities,
+        "risk_summary": risk_summary,
+        "treasury": treasury,
+        "totals": {
+            "entities": len(entities),
+            "projects": len(projects),
+            "open_tasks": len(open_tasks)
+        }
+    }
+
 # Include the router
 app.include_router(api_router)
 

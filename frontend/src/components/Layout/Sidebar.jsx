@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Shield,
   Building2,
+  ClipboardList,
   Menu,
   X
 } from 'lucide-react';
@@ -31,6 +32,7 @@ export const Sidebar = () => {
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+    { path: '/board-pack', icon: ClipboardList, labelKey: 'nav.boardPack' },
     { path: '/entities', icon: Building2, labelKey: 'nav.entities' },
     { path: '/projects', icon: FolderKanban, labelKey: 'nav.projects' },
     { path: '/tasks', icon: CheckSquare, labelKey: 'nav.tasks' },

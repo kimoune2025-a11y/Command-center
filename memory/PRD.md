@@ -132,11 +132,16 @@
 
 ## Backlog / Future Features
 
+## Board Pack (P1) — June 2026 ✅ DONE
+- Backend: single read-only aggregation endpoint GET /api/board-pack (entity performance: projects/budget/revenue/expenses/profit per entity + unassigned bucket; top 10 open priorities; derived risk summary: overdue tasks, projects on hold, over-budget entities, negative cashflow; treasury: net cash, monthly burn, cash runway in months).
+- Frontend: BoardPackPage (read-only executive view, FR/EN i18n, treasury cards, entity performance table, top priorities list, risk summary); Sidebar nav "Board Pack" (ClipboardList). Validated via curl + screenshot.
+- Note: risk summary is DERIVED from existing data; dedicated Risks register module is next.
+
 ### Upcoming — Conglomerate Mode (strict incremental, after v1.0 stable)
 - [x] P1 Entities module — DONE (June 2026)
-- [ ] P1 Board Pack page: read-only executive view (entity performance, top 10 priorities, risk summary, cash runway).
+- [x] P1 Board Pack page — DONE (June 2026)
 - [ ] P1 Decisions module: log strategic decisions.
-- [ ] P1 Risks module: risk register.
+- [ ] P1 Risks module: risk register (will feed Board Pack risk summary).
 - [ ] P2 Audit logs (immutable global audit log).
 - [ ] P2 Alerts automation (overdue tasks, budget alerts).
 - [ ] P2 Global search across projects/tasks/contacts/documents.
