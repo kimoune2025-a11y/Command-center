@@ -24,9 +24,13 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Configuration
-JWT_SECRET = os.environ.get('JWT_SECRET', 'cvln-command-center-secret-key-2024')
+JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
+
+# Login brute-force protection
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -48,7 +52,7 @@ security = HTTPBearer()
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8)
     name: str
     role: str = "viewer"
 
@@ -250,11 +254,32 @@ def check_role(required_roles: List[str]):
         return user
     return role_checker
 
+# ============== LOGIN BRUTE-FORCE HELPERS ==============
+
+async def check_login_lockout(identifier: str):
+    rec = await db.login_attempts.find_one({"identifier": identifier})
+    if rec and rec.get("count", 0) >= MAX_LOGIN_ATTEMPTS:
+        locked_until = rec.get("locked_until")
+        if locked_until and locked_until > datetime.now(timezone.utc).isoformat():
+            raise HTTPException(status_code=429, detail="Too many failed attempts. Please try again later.")
+
+async def register_failed_login(identifier: str):
+    rec = await db.login_attempts.find_one({"identifier": identifier})
+    count = (rec.get("count", 0) if rec else 0) + 1
+    update = {"count": count, "updated_at": datetime.now(timezone.utc).isoformat()}
+    if count >= MAX_LOGIN_ATTEMPTS:
+        update["locked_until"] = (datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_MINUTES)).isoformat()
+    await db.login_attempts.update_one({"identifier": identifier}, {"$set": update}, upsert=True)
+
+async def clear_login_attempts(identifier: str):
+    await db.login_attempts.delete_one({"identifier": identifier})
+
 # ============== AUTH ROUTES ==============
 
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserCreate):
-    existing = await db.users.find_one({"email": user_data.email})
+    email = user_data.email.lower().strip()
+    existing = await db.users.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -267,7 +292,7 @@ async def register(user_data: UserCreate):
     
     user_doc = {
         "id": user_id,
-        "email": user_data.email,
+        "email": email,
         "password": hashed_password,
         "name": user_data.name,
         "role": role,
@@ -279,7 +304,7 @@ async def register(user_data: UserCreate):
     token = create_token(user_id)
     user_response = UserResponse(
         id=user_id,
-        email=user_data.email,
+        email=email,
         name=user_data.name,
         role=role,
         created_at=user_doc["created_at"]
@@ -289,9 +314,13 @@ async def register(user_data: UserCreate):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(login_data: UserLogin):
-    user = await db.users.find_one({"email": login_data.email}, {"_id": 0})
+    email = login_data.email.lower().strip()
+    await check_login_lockout(email)
+    user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user or not pwd_context.verify(login_data.password, user["password"]):
+        await register_failed_login(email)
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    await clear_login_attempts(email)
     
     token = create_token(user["id"])
     user_response = UserResponse(
